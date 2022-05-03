@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "blog_post_code"
+version = "0.1.0"
+description = "Source code for my blog posts at willduke.github.io"
+authors = ["Will Duke <willduke.wd@gmail.com>"]
+
+[tool.poetry.scripts]
+conway = "blog_post_code.game_of_life.conway:main"
+
+[tool.poetry.dependencies]
+python = "^3.8, <3.11"
+numpy = "^1.22.3"
+scipy = "^1.8.0"
+matplotlib = "^3.5.1"
+pytest-cov = "^3.0.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+jupyter = "^1.0.0"
+black = "^22.3.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
