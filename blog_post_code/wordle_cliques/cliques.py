@@ -14,30 +14,47 @@ WORDS_ARCHIVE_PATH = PARENT_DIR / "words_alpha.zip"
 WORDS_FILENAME = "words_alpha.txt"
 CLIQUES_PATH = PARENT_DIR / "cliques.jsonl"
 
-EXAMPLE_WORDS = ["burps", "fldxt", "mckay", "vejoz", "whing", "track", "barge", "stink", "wreck"]
+EXAMPLE_WORDS = [
+    "burps",
+    "fldxt",
+    "mckay",
+    "vejoz",
+    "whing",
+    "track",
+    "barge",
+    "stink",
+    "wreck",
+]
 
-def extract_archive_to_word_list(archive_path: Path, filename: str) -> Iterable[str]:
+
+def extract_archive_to_word_list(
+    archive_path: Path = WORDS_ARCHIVE_PATH, 
+    filename: str = WORDS_FILENAME
+) -> Iterable[str]:
     """
     Provided a path to a zip archive and the name of the file within the archive
     containing an english word list, extract and read the file and return an iterable
     of the words.
     """
     return (
-        zipfile.ZipFile(archive_path, 'r')
+        zipfile.ZipFile(archive_path, "r")
         .read(filename)
-        .decode('utf-8')
-        .split("\r\n")
+        .decode("utf-8")
+        .splitlines()
     )
+
 
 @Pipe
 def filter_words_of_length_n(words: List[str], n: int) -> Iterable[str]:
     """Filter out words not of length n."""
     return filter(lambda word: len(word) == n, words)
 
+
 @Pipe
 def filter_words_with_duplicate_letters(words) -> Iterable[str]:
     "Filter out words with more than one of any letter."
     return filter(lambda word: len(word) == len(set(word)), words)
+
 
 @Pipe
 def filter_duplicate_word_sets(words: Iterable[str]) -> Iterable[str]:
@@ -52,6 +69,7 @@ def filter_duplicate_word_sets(words: Iterable[str]) -> Iterable[str]:
             seen_add(wordset)
             yield word
 
+
 @Pipe
 def get_unique_set_words_of_length_n(words: Iterable[str], n: int) -> Iterable[str]:
     """Get the filtered list of words of length n with no repeating digits,
@@ -63,11 +81,12 @@ def get_unique_set_words_of_length_n(words: Iterable[str], n: int) -> Iterable[s
         | filter_duplicate_word_sets
     )
 
+
 def create_graph_of_disjoint_words(words: Iterable[str]) -> Graph:
     """
     Create a igraph.Graph where each vertex is a word and two words
     share an edge if they have no letters in common.
-    
+
     igraph.Graph takes a list of edges as tuples of vertex indices.
     The edges are created by iterating through each word and adding
     edges for any remaining words that have disjoint letter sets.
@@ -76,11 +95,12 @@ def create_graph_of_disjoint_words(words: Iterable[str]) -> Graph:
     edges = [
         (i, j)
         for i, left in enumerate(wordsets)
-        for j, right in it.islice(enumerate(wordsets), i+1, None)
+        for j, right in it.islice(enumerate(wordsets), i + 1, None)
         if left.isdisjoint(right)
     ]
 
-    return Graph(edges = edges)
+    return Graph(edges=edges)
+
 
 def find_all_size_n_cliques(
     words: Iterable[str], size: int
@@ -94,47 +114,49 @@ def find_all_size_n_cliques(
     for pos, clique in enumerate(graph.cliques(size, size)):
         yield {pos: tuple(_words[idx] for idx in clique)}
 
-def plot_cliques(words: Iterable[str], filename: str):
 
-    _words = list(words)
-    graph = create_graph_of_disjoint_words(_words)
+def plot_example_cliques(filename: str):
+    """Plot an example of a five-clique among other connected words."""
+    graph = create_graph_of_disjoint_words(EXAMPLE_WORDS)
 
-    graph.vs["label"] = words
+    graph.vs["label"] = EXAMPLE_WORDS
     graph.vs["color"] = (["red"] * 5) + (["black"] * 4)
 
     plot(
-        graph, 
+        graph,
         filename,
-        layout=graph.layout("kk"), 
-        bbox=(700, 300), 
-        margin=40, 
-        vertex_label_dist = 2, 
-        vertex_size = 10
+        layout=graph.layout("kk"),
+        bbox=(700, 300),
+        margin=40,
+        vertex_label_dist=2,
+        vertex_size=10,
     )
+
 
 def main(
     words_archive_path: Path = WORDS_ARCHIVE_PATH,
     words_filename: str = WORDS_FILENAME,
-    cliques_path: Path = CLIQUES_PATH
+    cliques_path: Path = CLIQUES_PATH,
 ):
     """
-    Load a list of words from a file (filename: word_filename) 
+    Load a list of words from a file (filename: word_filename)
     within a zip archive (words_archive_path). Save a file with
     all of the cliques (of mutually exlusive letters) to cliques_path.
     """
 
-    words = (
-        extract_archive_to_word_list(words_archive_path, words_filename)
-        | get_unique_set_words_of_length_n(5)
-    )
+    words = extract_archive_to_word_list(
+        words_archive_path, words_filename
+    ) | get_unique_set_words_of_length_n(5)
 
     five_cliques = find_all_size_n_cliques(words, 5)
 
-    with jsonlines.open(cliques_path, 'w') as writer:
+    with jsonlines.open(cliques_path, "w") as writer:
         writer.write_all(five_cliques)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import time
+
     start = time.perf_counter()
     main()
     end = time.perf_counter()
