@@ -4,7 +4,7 @@ import itertools as it
 from os import PathLike
 from typing import Generator, List
 from pathlib import Path
-from pkg_resources import resource_filename
+from importlib.resources import files
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -27,7 +27,7 @@ PLAINTEXT_GLIDER = (
     "............OO......................"
 )
 
-IMAGE_DIR = Path(resource_filename("blog_post_code", "game_of_life/images"))
+IMAGE_DIR = Path(str(files("blog_post_code.game_of_life").joinpath("images")))
 
  
 def create_random_grid(length: int = 10, width: int = 10, seed=None) -> NDArray:
