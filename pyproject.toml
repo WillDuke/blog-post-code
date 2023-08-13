@@ -16,6 +16,7 @@ pipe = "^2.0"
 igraph = {extras = ["plotting"], version = "^0.9.11"}
 jsonlines = "^3.1.0"
 pandas = "^2.0.1"
+pytest-cov = "^4.1.0"
 
 [tool.poetry.group.dev.dependencies]
 jupyter = "^1.0.0"
